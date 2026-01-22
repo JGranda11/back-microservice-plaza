@@ -1,3 +1,30 @@
+server:
+  port: 8082
+
 spring:
   application:
     name: msvc_plaza
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/plaza
+    username: admin
+    password: admin
+    driver-class-name: org.postgresql.Driver
+
+  jpa:   # ✅ AHORA ESTÁ BIEN UBICADO
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql.BasicBinder: trace

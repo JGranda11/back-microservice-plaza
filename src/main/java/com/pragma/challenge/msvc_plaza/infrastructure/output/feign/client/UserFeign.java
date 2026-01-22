@@ -1,0 +1,13 @@
+package com.pragma.challenge.msvc_plaza.infrastructure.output.feign.client;
+
+import com.pragma.challenge.msvc_plaza.infrastructure.configuration.feign.FeignClientConfiguration;
+import com.pragma.challenge.msvc_plaza.infrastructure.output.feign.dto.response.IsOwnerResponse;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+@FeignClient(name = "USER-MICROSERVICE", url = "http://localhost:8081/v1/users", configuration = FeignClientConfiguration.class)
+public interface UserFeign {
+    @GetMapping("/{id}/is-owner")
+    IsOwnerResponse isOwner(@PathVariable Long id);
+}
