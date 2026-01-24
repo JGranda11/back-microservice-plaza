@@ -11,7 +11,7 @@ spring:
     password: admin
     driver-class-name: org.postgresql.Driver
 
-  jpa:   # ✅ AHORA ESTÁ BIEN UBICADO
+  jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
