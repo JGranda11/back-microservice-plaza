@@ -135,4 +135,38 @@ public class DishUseCaseTest {
         verify(dishPersistencePort, times(0)).saveDish(any());
     }
 
+    @Test
+    void modifyDish(){
+        Dish modifiedInfoDish = Dish.builder()
+                .description(DISH_NEW_DESCRIPTION)
+                .price(DISH_NEW_PRICE)
+                .build();
+
+        final Dish expectedModifiedDish = Dish.builder()
+                .id(DISH_ID)
+                .restaurant(mockRestaurant)
+                .name(DISH_NAME)
+                .description(DISH_NEW_DESCRIPTION)
+                .price(DISH_NEW_PRICE)
+                .category(mockDishCategory)
+                .imageUrl(DISH_IMAGE_URL)
+                .state(DISH_STATE)
+                .build();
+        when(dishPersistencePort.findById(any())).thenReturn(mockDish);
+        when(dishPersistencePort.saveDish(any())).thenReturn(expectedModifiedDish);
+
+        Dish modifiedDish = dishUseCase.modifyDish(DISH_ID, modifiedInfoDish);
+
+        assertEquals(DISH_NEW_DESCRIPTION, modifiedDish.getDescription());
+        assertEquals(DISH_NEW_PRICE, modifiedDish.getPrice());
+    }
+
+    @Test
+    void modifyDish_dishNotFound(){
+        when(dishPersistencePort.findById(any())).thenReturn(null);
+
+        assertThrows(EntityNotFoundException.class, () ->
+                dishUseCase.modifyDish(DISH_ID, mockDish));
+        verify(dishPersistencePort, times(0)).saveDish(any());
+    }
 }
