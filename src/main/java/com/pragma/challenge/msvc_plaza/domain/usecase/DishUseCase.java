@@ -35,6 +35,21 @@ public class DishUseCase implements DishServicePort {
         return dishPersistencePort.saveDish(dish);
     }
 
+    @Override
+    public Dish modifyDish(Long id, Dish dish) {
+        Dish dishToModify = dishPersistencePort.findById(id);
+        if(dishToModify == null){
+            throw new EntityNotFoundException(Dish.class.getSimpleName(), id.toString());
+        }
+        if(dish.getDescription() != null){
+            dishToModify.setDescription(dish.getDescription());
+        }
+        if(dish.getPrice() != null){
+            dishToModify.setPrice(dish.getPrice());
+        }
+        return dishPersistencePort.saveDish(dishToModify);
+    }
+
     private DishCategory findOrCreateCategory(String description){
         DishCategory category = dishCategoryPersistencePort.findByDescription(description);
         if(category == null) category = dishCategoryPersistencePort.saveCategory(description);
