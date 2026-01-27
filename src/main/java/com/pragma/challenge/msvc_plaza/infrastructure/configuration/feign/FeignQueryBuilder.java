@@ -13,7 +13,7 @@ public class FeignQueryBuilder implements QueryMapEncoder {
     @Override
     public Map<String, Object> encode(Object o) {
         ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.convertValue(o, new TypeReference<Map<String, Object>>() {});
+        return objectMapper.convertValue(o, new TypeReference <>() {});
 
     }
 }

@@ -4,10 +4,14 @@ import com.pragma.challenge.msvc_plaza.domain.exception.EntityNotFoundException;
 import com.pragma.challenge.msvc_plaza.domain.model.Dish;
 import com.pragma.challenge.msvc_plaza.domain.model.DishCategory;
 import com.pragma.challenge.msvc_plaza.domain.model.Restaurant;
+import com.pragma.challenge.msvc_plaza.domain.model.security.AuthorizedUser;
 import com.pragma.challenge.msvc_plaza.domain.spi.DishCategoryPersistencePort;
 import com.pragma.challenge.msvc_plaza.domain.spi.DishPersistencePort;
 import com.pragma.challenge.msvc_plaza.domain.spi.RestaurantPersistencePort;
+import com.pragma.challenge.msvc_plaza.domain.spi.security.AuthorizationSecurityPort;
+import com.pragma.challenge.msvc_plaza.domain.util.TokenHolder;
 import com.pragma.challenge.msvc_plaza.domain.util.enums.DishState;
+import com.pragma.challenge.msvc_plaza.domain.util.enums.RoleName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -27,9 +31,21 @@ public class DishUseCaseTest {
     private DishCategoryPersistencePort dishCategoryPersistencePort;
     @Mock
     private RestaurantPersistencePort restaurantPersistencePort;
+    @Mock
+    private AuthorizationSecurityPort authorizationSecurityPort;
 
     @InjectMocks
     private DishUseCase dishUseCase;
+
+    private static final String USER_ID = "2";
+    private static final RoleName USER_ROLE = RoleName.OWNER;
+    private static final String USER_TOKEN = "user-token-mock";
+
+    private final AuthorizedUser mockUser = AuthorizedUser.builder()
+            .role(USER_ROLE)
+            .token(USER_TOKEN)
+            .id(USER_ID)
+            .build();
 
     private static final Long RESTAURANT_ID = 3L;
     private static final String RESTAURANT_NIT = "987654321";
@@ -92,6 +108,7 @@ public class DishUseCaseTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        TokenHolder.setToken(USER_TOKEN);
     }
 
     @Test
@@ -100,6 +117,7 @@ public class DishUseCaseTest {
         when(dishCategoryPersistencePort.findByDescription(any())).thenReturn(mockDishCategory);
         when(restaurantPersistencePort.findById(any())).thenReturn(mockRestaurant);
         when(dishPersistencePort.saveDish(any())).thenReturn(expectedDish);
+        when(authorizationSecurityPort.authorize(USER_TOKEN)).thenReturn(mockUser);
 
         Dish dish = dishUseCase.createDish(mockDish);
 
@@ -114,6 +132,7 @@ public class DishUseCaseTest {
         when(dishCategoryPersistencePort.findByDescription(any())).thenReturn(null);
         when(dishCategoryPersistencePort.saveCategory(any())).thenReturn(mockDishCategory);
         when(restaurantPersistencePort.findById(any())).thenReturn(mockRestaurant);
+        when(authorizationSecurityPort.authorize(USER_TOKEN)).thenReturn(mockUser);
         when(dishPersistencePort.saveDish(any())).thenReturn(expectedDish);
 
         Dish dish = dishUseCase.createDish(mockDish);
@@ -153,6 +172,8 @@ public class DishUseCaseTest {
                 .state(DISH_STATE)
                 .build();
         when(dishPersistencePort.findById(any())).thenReturn(mockDish);
+        when(restaurantPersistencePort.findById(any())).thenReturn(mockRestaurant);
+        when(authorizationSecurityPort.authorize(USER_TOKEN)).thenReturn(mockUser);
         when(dishPersistencePort.saveDish(any())).thenReturn(expectedModifiedDish);
 
         Dish modifiedDish = dishUseCase.modifyDish(DISH_ID, modifiedInfoDish);
