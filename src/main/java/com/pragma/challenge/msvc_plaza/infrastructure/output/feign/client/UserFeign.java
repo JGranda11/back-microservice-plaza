@@ -6,7 +6,10 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(name = "USER-MICROSERVICE", url = "http://localhost:8081/v1/users", configuration = FeignClientConfiguration.class)
+@FeignClient(
+        name = "USER-CLIENT",
+        url = "http://localhost:8081/v1/users",
+        configuration = FeignClientConfiguration.class)
 public interface UserFeign {
     @GetMapping("/{id}/is-owner")
     IsOwnerResponse isOwner(@PathVariable Long id);

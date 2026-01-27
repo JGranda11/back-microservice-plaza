@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -42,6 +43,7 @@ public class DishController {
             )
     })
     @PostMapping
+    @PreAuthorize("hasAnyRole('OWNER')")
     public ResponseEntity<DishResponse> createDish(@RequestBody @Valid DishRequest dishRequest){
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 dishHandler.createDish(dishRequest)
@@ -67,6 +69,7 @@ public class DishController {
             ),
     })
     @PostMapping("/{id}")
+    @PreAuthorize("hasAnyRole('OWNER')")
     public ResponseEntity<DishResponse> patchDish(@PathVariable Long id,
                                                   @RequestBody @Valid PatchDishRequest patchDishRequest){
         return ResponseEntity.ok(dishHandler.modifyDish(id, patchDishRequest));
