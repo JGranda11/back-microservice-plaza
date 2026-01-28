@@ -1,6 +1,7 @@
 package com.pragma.challenge.msvc_plaza.infrastructure.input.rest;
 
 import com.pragma.challenge.msvc_plaza.application.dto.request.DishRequest;
+import com.pragma.challenge.msvc_plaza.application.dto.request.DishStateRequest;
 import com.pragma.challenge.msvc_plaza.application.dto.request.PatchDishRequest;
 import com.pragma.challenge.msvc_plaza.application.dto.response.DishResponse;
 import com.pragma.challenge.msvc_plaza.application.handler.DishHandler;
@@ -73,5 +74,36 @@ public class DishController {
     public ResponseEntity<DishResponse> patchDish(@PathVariable Long id,
                                                   @RequestBody @Valid PatchDishRequest patchDishRequest){
         return ResponseEntity.ok(dishHandler.modifyDish(id, patchDishRequest));
+    }
+
+    @Operation(summary = "Change state of the given dish")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Dish state has been changed",
+                    content =  @Content(schema = @Schema(implementation = DishResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Desired dish hasn't been found",
+                    content =  @Content(schema = @Schema(implementation = ExceptionResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "User who's trying to patch an object that doesn't belong to they",
+                    content =  @Content(schema = @Schema(implementation = ExceptionResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Validations don't pass",
+                    content =  @Content(schema = @Schema(implementation = ValidationExceptionResponse.class))
+            ),
+    })
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('OWNER')")
+    public ResponseEntity<DishResponse> changeState(@PathVariable Long id,@RequestBody DishStateRequest dishStateRequest){
+        return ResponseEntity.ok(
+                dishHandler.setDishState(id, dishStateRequest)
+        );
     }
 }

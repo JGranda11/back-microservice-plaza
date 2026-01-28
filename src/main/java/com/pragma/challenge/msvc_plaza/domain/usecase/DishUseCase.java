@@ -60,6 +60,15 @@ public class DishUseCase implements DishServicePort {
         return dishPersistencePort.saveDish(dishToModify);
     }
 
+    @Override
+    public Dish changeDishState(Long id, DishState state) {
+        Dish dishToModify = findById(id);
+        validateDish(dishToModify);
+        dishToModify.setState(state);
+
+        return dishPersistencePort.saveDish(dishToModify);
+    }
+
     private DishCategory findOrCreateCategory(String description){
         DishCategory category = dishCategoryPersistencePort.findByDescription(description);
         if(category == null) category = dishCategoryPersistencePort.saveCategory(description);
@@ -73,7 +82,6 @@ public class DishUseCase implements DishServicePort {
         }
         String rawToken = TokenHolder.getToken();
 
-
         String cleanToken = (rawToken != null && rawToken.startsWith(DomainConstants.TOKEN_PREFIX))
                 ? rawToken.substring(DomainConstants.TOKEN_PREFIX.length())
                 : rawToken;
@@ -82,5 +90,12 @@ public class DishUseCase implements DishServicePort {
         if (!Objects.equals(Long.valueOf(user.getId()), restaurant.getOwnerId())){
             throw  new RestaurantDoesNotBelongToUserException();
         }
+    }
+
+    private Dish findById(Long id){
+        Dish dish = dishPersistencePort.findById(id);
+        if(dish == null)
+            throw new EntityNotFoundException(Dish.class.getSimpleName(), id.toString());
+        return dish;
     }
 }
