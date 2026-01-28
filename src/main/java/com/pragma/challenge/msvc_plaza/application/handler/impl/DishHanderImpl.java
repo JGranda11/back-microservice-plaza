@@ -1,6 +1,7 @@
 package com.pragma.challenge.msvc_plaza.application.handler.impl;
 
 import com.pragma.challenge.msvc_plaza.application.dto.request.DishRequest;
+import com.pragma.challenge.msvc_plaza.application.dto.request.DishStateRequest;
 import com.pragma.challenge.msvc_plaza.application.dto.request.PatchDishRequest;
 import com.pragma.challenge.msvc_plaza.application.dto.response.DishResponse;
 import com.pragma.challenge.msvc_plaza.application.handler.DishHandler;
@@ -35,5 +36,12 @@ public class DishHanderImpl implements DishHandler {
                 dishServicePort.modifyDish(id, dish)
         );
 
+    }
+
+    @Override
+    public DishResponse setDishState(Long id, DishStateRequest dishStateRequest) {
+        return dishResponseMapper.toResponse(
+                dishServicePort.changeDishState(id, dishStateRequest.getState())
+        );
     }
 }
