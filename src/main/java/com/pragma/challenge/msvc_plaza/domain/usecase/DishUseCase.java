@@ -11,6 +11,7 @@ import com.pragma.challenge.msvc_plaza.domain.spi.DishCategoryPersistencePort;
 import com.pragma.challenge.msvc_plaza.domain.spi.DishPersistencePort;
 import com.pragma.challenge.msvc_plaza.domain.spi.RestaurantPersistencePort;
 import com.pragma.challenge.msvc_plaza.domain.spi.security.AuthorizationSecurityPort;
+import com.pragma.challenge.msvc_plaza.domain.util.DomainConstants;
 import com.pragma.challenge.msvc_plaza.domain.util.TokenHolder;
 import com.pragma.challenge.msvc_plaza.domain.util.enums.DishState;
 
@@ -67,10 +68,17 @@ public class DishUseCase implements DishServicePort {
 
     private void validateDish(Dish dish){
         Restaurant restaurant = restaurantPersistencePort.findById(dish.getRestaurant().getId());
-        AuthorizedUser user = authorizationSecurityPort.authorize(TokenHolder.getToken());
         if(restaurant == null){
             throw new EntityNotFoundException(Restaurant.class.getSimpleName(), String.valueOf(dish.getRestaurant().getId()));
         }
+        String rawToken = TokenHolder.getToken();
+
+
+        String cleanToken = (rawToken != null && rawToken.startsWith(DomainConstants.TOKEN_PREFIX))
+                ? rawToken.substring(DomainConstants.TOKEN_PREFIX.length())
+                : rawToken;
+        AuthorizedUser user = authorizationSecurityPort.authorize(cleanToken);
+
         if (!Objects.equals(Long.valueOf(user.getId()), restaurant.getOwnerId())){
             throw  new RestaurantDoesNotBelongToUserException();
         }
