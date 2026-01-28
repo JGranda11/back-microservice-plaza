@@ -25,12 +25,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 public class FeignClientConfiguration {
 
     @Bean
-    Logger.Level feignLoggerLevel() {
+    public Logger.Level feignLoggerLevel() {
         return Logger.Level.FULL;
     }
 
     @Bean
-    QueryMapEncoder feignQueryMapEncoder(FeignQueryBuilder feignQueryBuilder) {
+    public QueryMapEncoder feignQueryMapEncoder(FeignQueryBuilder feignQueryBuilder) {
         Feign.builder().queryMapEncoder(feignQueryBuilder);
         return feignQueryBuilder;
     }

@@ -22,7 +22,7 @@ public class ApplicationConstants {
     public static final String PRICE_FIELD_NOT_NULL = "'price' field must not be null";
     public static final String CATEGORY_FIELD_NOT_NULL = "'category' field must not be null";
     public static final String IMAGE_URL_FIELD_NOT_NULL = "'category' field must not be null";
-
+    public static final String EMPLOYEE_ID_FIELD_NOT_NULL =  "'employee id' field must not be null";
 
     // Wrong pattern messages
     public static final String WRONG_PHONE_FORMAT = "Given phone number does not match with expected pattern";

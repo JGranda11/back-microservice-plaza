@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 public class DishCategoryJpaAdapter implements DishCategoryPersistencePort {
     private final DishCategoryEntityMapper dishCategoryEntityMapper;
     private final DishCategoryRepository dishCategoryRepository;
+
     @Override
     public DishCategory findByDescription(String description) {
         return dishCategoryEntityMapper.toDomain(

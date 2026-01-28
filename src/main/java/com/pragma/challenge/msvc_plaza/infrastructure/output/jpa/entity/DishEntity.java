@@ -38,4 +38,7 @@ public class DishEntity {
     @Column(name = "dish_state", nullable = false)
     private DishState state;
 
+    @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
+    @JoinColumn(name = "restaurant_id", referencedColumnName = "restaurant_id", nullable = false)
+    private RestaurantEntity restaurant;
 }

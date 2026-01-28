@@ -1,8 +1,12 @@
 package com.pragma.challenge.msvc_plaza.infrastructure.input.rest;
 
+import com.pragma.challenge.msvc_plaza.application.dto.request.EmployeeRequest;
 import com.pragma.challenge.msvc_plaza.application.dto.request.RestaurantRequest;
+import com.pragma.challenge.msvc_plaza.application.dto.response.EmployeeResponse;
 import com.pragma.challenge.msvc_plaza.application.dto.response.RestaurantResponse;
 import com.pragma.challenge.msvc_plaza.application.handler.RestaurantHandler;
+import com.pragma.challenge.msvc_plaza.infrastructure.configuration.advisor.response.ExceptionResponse;
+import com.pragma.challenge.msvc_plaza.infrastructure.configuration.advisor.response.ValidationExceptionResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -63,5 +67,37 @@ public class RestaurantController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(restaurantHandler.createRestaurant(restaurantRequest));
+    }
+
+
+    @Operation(summary = "Register relation between Employee and Restaurant")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Relation between employee and restaurant has been registered successfully",
+                    content =  @Content(schema = @Schema(implementation = RestaurantResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Given user has no Owner role",
+                    content =  @Content(schema = @Schema(implementation = ExceptionResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode ="409",
+                    description = "A Restaurant with that NIT already exists",
+                    content =  @Content(schema = @Schema(implementation = ExceptionResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Validations don't pass",
+                    content =  @Content(schema = @Schema(implementation = ValidationExceptionResponse.class))
+            ),
+    })
+    @PreAuthorize("hasAnyRole('OWNER')")
+    @PostMapping("/employees")
+    public ResponseEntity<EmployeeResponse> registerEmployee(@RequestBody EmployeeRequest employeeRequest){
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                restaurantHandler.registerEmployee(employeeRequest)
+        );
     }
 }

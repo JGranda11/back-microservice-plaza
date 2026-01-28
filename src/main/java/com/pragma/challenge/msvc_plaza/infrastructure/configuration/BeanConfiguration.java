@@ -3,10 +3,7 @@ package com.pragma.challenge.msvc_plaza.infrastructure.configuration;
 import com.pragma.challenge.msvc_plaza.domain.api.DishServicePort;
 import com.pragma.challenge.msvc_plaza.domain.api.RestaurantServicePort;
 import com.pragma.challenge.msvc_plaza.domain.api.security.AuthorizationServicePort;
-import com.pragma.challenge.msvc_plaza.domain.spi.DishCategoryPersistencePort;
-import com.pragma.challenge.msvc_plaza.domain.spi.DishPersistencePort;
-import com.pragma.challenge.msvc_plaza.domain.spi.RestaurantPersistencePort;
-import com.pragma.challenge.msvc_plaza.domain.spi.UserPersistencePort;
+import com.pragma.challenge.msvc_plaza.domain.spi.*;
 import com.pragma.challenge.msvc_plaza.domain.spi.security.AuthorizationSecurityPort;
 import com.pragma.challenge.msvc_plaza.domain.usecase.DishUseCase;
 import com.pragma.challenge.msvc_plaza.domain.usecase.RestaurantUseCase;
@@ -24,10 +21,14 @@ public class BeanConfiguration {
     @Bean
     public RestaurantServicePort restaurantServicePort(
             RestaurantPersistencePort restaurantPersistencePort,
-            UserPersistencePort userPersistencePort){
+            UserPersistencePort userPersistencePort,
+            EmployeePersistencePort employeePersistencePort,
+            AuthorizationSecurityPort authorizationSecurityPort){
         return new RestaurantUseCase(
                 restaurantPersistencePort,
-                userPersistencePort
+                userPersistencePort,
+                employeePersistencePort,
+                authorizationSecurityPort
         );
     }
 
