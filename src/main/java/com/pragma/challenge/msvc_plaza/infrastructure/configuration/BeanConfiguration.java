@@ -1,11 +1,13 @@
 package com.pragma.challenge.msvc_plaza.infrastructure.configuration;
 
 import com.pragma.challenge.msvc_plaza.domain.api.DishServicePort;
+import com.pragma.challenge.msvc_plaza.domain.api.OrderServicePort;
 import com.pragma.challenge.msvc_plaza.domain.api.RestaurantServicePort;
 import com.pragma.challenge.msvc_plaza.domain.api.security.AuthorizationServicePort;
 import com.pragma.challenge.msvc_plaza.domain.spi.*;
 import com.pragma.challenge.msvc_plaza.domain.spi.security.AuthorizationSecurityPort;
 import com.pragma.challenge.msvc_plaza.domain.usecase.DishUseCase;
+import com.pragma.challenge.msvc_plaza.domain.usecase.OrderUseCase;
 import com.pragma.challenge.msvc_plaza.domain.usecase.RestaurantUseCase;
 import com.pragma.challenge.msvc_plaza.domain.usecase.security.AuthorizationUseCase;
 import org.springframework.context.annotation.Bean;
@@ -54,6 +56,23 @@ public class BeanConfiguration {
             AuthorizationSecurityPort authorizationSecurityPort
     ){
         return new AuthorizationUseCase(authorizationSecurityPort);
+    }
+
+    @Bean
+    public OrderServicePort orderServicePort(
+            OrderPersistencePort orderPersistencePort,
+            RestaurantPersistencePort restaurantPersistencePort,
+            AuthorizationSecurityPort authorizationSecurityPort,
+            DishPersistencePort dishPersistencePort,
+            EmployeePersistencePort employeePersistencePort
+    ){
+        return new OrderUseCase(
+                orderPersistencePort,
+                restaurantPersistencePort,
+                authorizationSecurityPort,
+                dishPersistencePort,
+                employeePersistencePort
+        );
     }
 
     @Bean

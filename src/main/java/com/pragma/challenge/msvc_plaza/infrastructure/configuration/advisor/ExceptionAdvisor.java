@@ -40,6 +40,16 @@ public class ExceptionAdvisor {
         return ExceptionResponseBuilder.buildResponse(e, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(CustomerAlreadyHasProcessingOrderException.class)
+    public ResponseEntity<ExceptionResponse> handleCustomerAlreadyHasAProcessingOrder(CustomerAlreadyHasProcessingOrderException e){
+        return ExceptionResponseBuilder.buildResponse(e, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(DishDoesNotBelongToOrderRestaurantException.class)
+    public ResponseEntity<ExceptionResponse> handleDishDoesNotBelongToOrderRestaurant(DishDoesNotBelongToOrderRestaurantException e){
+        return ExceptionResponseBuilder.buildResponse(e, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler( MethodArgumentNotValidException.class )
     public ResponseEntity<ValidationExceptionResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         ValidationExceptionResponse exceptionResponse = ValidationExceptionResponse.builder()
