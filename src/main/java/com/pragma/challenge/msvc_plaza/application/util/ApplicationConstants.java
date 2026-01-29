@@ -1,6 +1,7 @@
 package com.pragma.challenge.msvc_plaza.application.util;
 
 public class ApplicationConstants {
+
     private ApplicationConstants(){
         throw new IllegalStateException("Utility Class");
     }

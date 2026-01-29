@@ -14,6 +14,8 @@ import com.pragma.challenge.msvc_plaza.domain.spi.UserPersistencePort;
 import com.pragma.challenge.msvc_plaza.domain.spi.security.AuthorizationSecurityPort;
 import com.pragma.challenge.msvc_plaza.domain.util.DomainConstants;
 import com.pragma.challenge.msvc_plaza.domain.util.TokenHolder;
+import com.pragma.challenge.msvc_plaza.domain.util.pagination.DomainPage;
+import com.pragma.challenge.msvc_plaza.domain.util.pagination.PaginationData;
 
 import java.util.Objects;
 
@@ -43,6 +45,13 @@ public class RestaurantUseCase implements RestaurantServicePort {
     public Employee registerEmployee(Employee employee) {
         validateRegisterEmployee(employee);
         return employeePersistencePort.saveEmployee(employee);
+    }
+
+    @Override
+    public DomainPage<Restaurant> findPage(PaginationData paginationData) {
+        paginationData.setColumn(DomainConstants.NAME_FIELD);
+
+        return restaurantPersistencePort.findAll(paginationData);
     }
 
     private void validateRestaurant(Restaurant restaurant){

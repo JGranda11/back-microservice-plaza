@@ -10,8 +10,11 @@ import com.pragma.challenge.msvc_plaza.domain.spi.EmployeePersistencePort;
 import com.pragma.challenge.msvc_plaza.domain.spi.RestaurantPersistencePort;
 import com.pragma.challenge.msvc_plaza.domain.spi.UserPersistencePort;
 import com.pragma.challenge.msvc_plaza.domain.spi.security.AuthorizationSecurityPort;
+import com.pragma.challenge.msvc_plaza.domain.util.DomainConstants;
 import com.pragma.challenge.msvc_plaza.domain.util.TokenHolder;
 import com.pragma.challenge.msvc_plaza.domain.util.enums.RoleName;
+import com.pragma.challenge.msvc_plaza.domain.util.pagination.DomainPage;
+import com.pragma.challenge.msvc_plaza.domain.util.pagination.PaginationData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -155,5 +158,19 @@ public class RestaurantUseCaseTest {
 
         assertThrows(EntityNotFoundException.class, () -> restaurantUseCase.registerEmployee(employee));
         verify(employeePersistencePort, never()).saveEmployee(any());
+    }
+
+    @Test
+    void findPage_ShouldReturnDomainPageOfRestaurants() {
+        PaginationData paginationData = PaginationData.builder().build();
+        DomainPage<Restaurant> expectedPage = DomainPage.<Restaurant>builder().build();
+
+        when(restaurantPersistencePort.findAll(any(PaginationData.class))).thenReturn(expectedPage);
+
+        DomainPage<Restaurant> result = restaurantUseCase.findPage(paginationData);
+
+        verify(restaurantPersistencePort).findAll(paginationData);
+        assertEquals(expectedPage, result);
+        assertEquals(DomainConstants.NAME_FIELD, paginationData.getColumn());
     }
 }

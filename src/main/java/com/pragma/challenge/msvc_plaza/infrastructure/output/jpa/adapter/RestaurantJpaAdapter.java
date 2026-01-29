@@ -2,10 +2,15 @@ package com.pragma.challenge.msvc_plaza.infrastructure.output.jpa.adapter;
 
 import com.pragma.challenge.msvc_plaza.domain.model.Restaurant;
 import com.pragma.challenge.msvc_plaza.domain.spi.RestaurantPersistencePort;
+import com.pragma.challenge.msvc_plaza.domain.util.pagination.DomainPage;
+import com.pragma.challenge.msvc_plaza.domain.util.pagination.PaginationData;
 import com.pragma.challenge.msvc_plaza.infrastructure.output.jpa.entity.RestaurantEntity;
+import com.pragma.challenge.msvc_plaza.infrastructure.output.jpa.mapper.PaginationJpaMapper;
 import com.pragma.challenge.msvc_plaza.infrastructure.output.jpa.mapper.RestaurantEntityMapper;
 import com.pragma.challenge.msvc_plaza.infrastructure.output.jpa.repository.RestaurantRepository;
+import com.pragma.challenge.msvc_plaza.infrastructure.output.jpa.util.PaginationJpa;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -13,7 +18,7 @@ import org.springframework.stereotype.Component;
 public class RestaurantJpaAdapter implements RestaurantPersistencePort {
     private final RestaurantRepository restaurantRepository;
     private final RestaurantEntityMapper restaurantEntityMapper;
-
+    private final PaginationJpaMapper paginationJpaMapper;
 
     @Override
     public Restaurant findById(Long id) {
@@ -35,5 +40,13 @@ public class RestaurantJpaAdapter implements RestaurantPersistencePort {
         return restaurantEntityMapper.toDomain(
                 restaurantRepository.findByNit(nit).orElse(null)
         );
+    }
+
+    @Override
+    public DomainPage<Restaurant> findAll(PaginationData paginationData) {
+        PaginationJpa paginationJpa = paginationJpaMapper.toJpa(paginationData);
+        Page<RestaurantEntity> page = restaurantRepository.findAll(paginationJpa.createPageable());
+
+        return restaurantEntityMapper.toDomains(page);
     }
 }
