@@ -2,8 +2,11 @@ package com.pragma.challenge.msvc_plaza.infrastructure.input.rest;
 
 import com.pragma.challenge.msvc_plaza.application.dto.request.EmployeeRequest;
 import com.pragma.challenge.msvc_plaza.application.dto.request.RestaurantRequest;
+import com.pragma.challenge.msvc_plaza.application.dto.request.filter.DishFilterRequest;
+import com.pragma.challenge.msvc_plaza.application.dto.request.pagination.PageQuery;
 import com.pragma.challenge.msvc_plaza.application.dto.request.pagination.PaginationRequest;
 import com.pragma.challenge.msvc_plaza.application.dto.request.pagination.RestaurantPageQuery;
+import com.pragma.challenge.msvc_plaza.application.dto.response.DishResponse;
 import com.pragma.challenge.msvc_plaza.application.dto.response.EmployeeResponse;
 import com.pragma.challenge.msvc_plaza.application.dto.response.PageResponse;
 import com.pragma.challenge.msvc_plaza.application.dto.response.RestaurantResponse;
@@ -67,7 +70,6 @@ public class RestaurantController {
     @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<RestaurantResponse> createRestaurant(
             @RequestBody @Valid RestaurantRequest restaurantRequest) {
-
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(restaurantHandler.createRestaurant(restaurantRequest));
@@ -118,6 +120,30 @@ public class RestaurantController {
         PaginationRequest pagination = PaginationRequest.build(query);
         return ResponseEntity.ok(
                 restaurantHandler.findPage(pagination)
+        );
+    }
+
+    @Operation(summary = "Search dishes of given restaurant")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Dishes of that restaurant where found",
+                    content =  @Content(schema = @Schema(implementation = PageResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "A restaurant with that Id doesn't exists",
+                    content =  @Content(schema = @Schema(implementation = ExceptionResponse.class))
+            ),
+    })
+    @GetMapping("/{id}/dishes")
+    public ResponseEntity<PageResponse<DishResponse>> getRestaurantDishes(
+            @PathVariable Long id,
+            @Nullable PageQuery query,
+            @Nullable DishFilterRequest filterRequest){
+        PaginationRequest pagination = PaginationRequest.build(query);
+        return ResponseEntity.ok(
+                restaurantHandler.findDishesOfRestaurant(id,pagination,filterRequest)
         );
     }
 }

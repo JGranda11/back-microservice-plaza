@@ -3,9 +3,11 @@ package com.pragma.challenge.msvc_plaza.domain.usecase;
 import com.pragma.challenge.msvc_plaza.domain.exception.EntityAlreadyExistsException;
 import com.pragma.challenge.msvc_plaza.domain.exception.EntityNotFoundException;
 import com.pragma.challenge.msvc_plaza.domain.exception.UserRoleMustBeOwnerException;
+import com.pragma.challenge.msvc_plaza.domain.model.Dish;
 import com.pragma.challenge.msvc_plaza.domain.model.Employee;
 import com.pragma.challenge.msvc_plaza.domain.model.Restaurant;
 import com.pragma.challenge.msvc_plaza.domain.model.security.AuthorizedUser;
+import com.pragma.challenge.msvc_plaza.domain.spi.DishPersistencePort;
 import com.pragma.challenge.msvc_plaza.domain.spi.EmployeePersistencePort;
 import com.pragma.challenge.msvc_plaza.domain.spi.RestaurantPersistencePort;
 import com.pragma.challenge.msvc_plaza.domain.spi.UserPersistencePort;
@@ -39,6 +41,9 @@ public class RestaurantUseCaseTest {
     @Mock
     private EmployeePersistencePort employeePersistencePort;
 
+    @Mock
+    private DishPersistencePort dishPersistencePort;
+
     @InjectMocks
     private RestaurantUseCase restaurantUseCase;
 
@@ -52,6 +57,11 @@ public class RestaurantUseCaseTest {
 
     private Restaurant mockRestaurant;
     private Restaurant expectedRestaurant;
+
+    public static final String TOKEN = "Bearer any-token-buh";
+    private static final String CATEGORY_MAIN_COURSE = "Main Course";
+    private static final String CATEGORY_DESSERTS = "Desserts";
+
 
     @BeforeEach
     void setUp() {
@@ -173,4 +183,19 @@ public class RestaurantUseCaseTest {
         assertEquals(expectedPage, result);
         assertEquals(DomainConstants.NAME_FIELD, paginationData.getColumn());
     }
+
+    @Test
+    void findDishesOfRestaurant_ShouldReturnDomainPageOfDishes() {
+        PaginationData paginationData = PaginationData.builder().build();
+        DomainPage<Dish> expectedPage = DomainPage.<Dish>builder().build();
+
+        when(dishPersistencePort.findAll(any(), any())).thenReturn(expectedPage);
+        when(restaurantPersistencePort.findById(any())).thenReturn(mockRestaurant);
+
+        DomainPage<Dish> result = restaurantUseCase.findDishesOfRestaurant(RESTAURANT_ID, CATEGORY_MAIN_COURSE, paginationData);
+
+        verify(dishPersistencePort).findAll(any(), eq(paginationData));
+        assertEquals(expectedPage, result);
+    }
+
 }

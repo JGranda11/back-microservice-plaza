@@ -23,12 +23,14 @@ public class BeanConfiguration {
             RestaurantPersistencePort restaurantPersistencePort,
             UserPersistencePort userPersistencePort,
             EmployeePersistencePort employeePersistencePort,
-            AuthorizationSecurityPort authorizationSecurityPort){
+            AuthorizationSecurityPort authorizationSecurityPort,
+            DishPersistencePort dishPersistencePort){
         return new RestaurantUseCase(
                 restaurantPersistencePort,
                 userPersistencePort,
                 employeePersistencePort,
-                authorizationSecurityPort
+                authorizationSecurityPort,
+                dishPersistencePort
         );
     }
 
