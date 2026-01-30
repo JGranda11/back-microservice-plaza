@@ -55,7 +55,7 @@ public class OrderSpecificationBuilder {
     private static Specification<OrderEntity> hasState(OrderState state) {
         return (root, query, criteriaBuilder) ->
                 state == null ? criteriaBuilder.conjunction()
-                        : criteriaBuilder.equal(root.get(STATE), state);
+                        // Usamos la expresión explícita para evitar que Hibernate mande un entero
+                        : criteriaBuilder.equal(root.get(STATE).as(String.class), state.toString());
     }
-
 }

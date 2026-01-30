@@ -99,8 +99,9 @@ public class RestaurantController {
                     content =  @Content(schema = @Schema(implementation = ValidationExceptionResponse.class))
             ),
     })
-    @PreAuthorize("hasAnyRole('OWNER')")
+
     @PostMapping("/employees")
+    //@PreAuthorize("hasAnyRole('OWNER')")
     public ResponseEntity<EmployeeResponse> registerEmployee(@RequestBody EmployeeRequest employeeRequest){
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 restaurantHandler.registerEmployee(employeeRequest)

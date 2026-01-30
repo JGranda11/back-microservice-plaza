@@ -29,6 +29,7 @@ public class OrderEntity {
     @JoinColumn(name = "restaurant_id", referencedColumnName = "restaurant_id", nullable = false)
     private RestaurantEntity restaurant;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "state", nullable = false)
     private OrderState state;
 

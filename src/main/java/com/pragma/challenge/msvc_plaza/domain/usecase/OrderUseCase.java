@@ -4,7 +4,9 @@ import com.pragma.challenge.msvc_plaza.domain.api.OrderServicePort;
 import com.pragma.challenge.msvc_plaza.domain.exception.CustomerAlreadyHasProcessingOrderException;
 import com.pragma.challenge.msvc_plaza.domain.exception.DishDoesNotBelongToOrderRestaurantException;
 import com.pragma.challenge.msvc_plaza.domain.exception.EntityNotFoundException;
+import com.pragma.challenge.msvc_plaza.domain.exception.NotAuthorizedException;
 import com.pragma.challenge.msvc_plaza.domain.model.Dish;
+import com.pragma.challenge.msvc_plaza.domain.model.Employee;
 import com.pragma.challenge.msvc_plaza.domain.model.Restaurant;
 import com.pragma.challenge.msvc_plaza.domain.model.order.Order;
 import com.pragma.challenge.msvc_plaza.domain.model.order.OrderDish;
@@ -18,7 +20,10 @@ import com.pragma.challenge.msvc_plaza.domain.util.DomainConstants;
 import com.pragma.challenge.msvc_plaza.domain.util.GenerationPIN;
 import com.pragma.challenge.msvc_plaza.domain.util.TokenHolder;
 import com.pragma.challenge.msvc_plaza.domain.util.enums.OrderState;
+import com.pragma.challenge.msvc_plaza.domain.util.enums.RoleName;
 import com.pragma.challenge.msvc_plaza.domain.util.filter.OrderFilter;
+import com.pragma.challenge.msvc_plaza.domain.util.pagination.DomainPage;
+import com.pragma.challenge.msvc_plaza.domain.util.pagination.PaginationData;
 
 import java.util.Objects;
 
@@ -44,8 +49,7 @@ public class OrderUseCase implements OrderServicePort {
 
     @Override
     public Order createOrder(Order order) {
-        AuthorizedUser user = authorizationSecurityPort.authorize(
-                TokenHolder.getToken().substring(DomainConstants.TOKEN_PREFIX.length()));
+        AuthorizedUser user = getCurrentUser();
         validateCustomerCanAddOrder(order, user);
         order.setState(OrderState.WAITING);
         order.setSecurityPin(GenerationPIN.generateRandomSecurityPin());
@@ -53,8 +57,17 @@ public class OrderUseCase implements OrderServicePort {
         return orderPersistencePort.saveOrder(order);
     }
 
+    @Override
+    public DomainPage<Order> findOrders(OrderFilter filter, PaginationData paginationData) {
+        AuthorizedUser user = getCurrentUser();
+        if(user.getRole() != RoleName.EMPLOYEE)
+            throw new NotAuthorizedException();
+        Employee employee = employeePersistencePort.findById(user.getId());
+        filter.setRestaurantId(String.valueOf(employee.getRestaurant().getId()));
+        return orderPersistencePort.findOrders(filter, paginationData);
+    }
+
     private void validateCustomerCanAddOrder(Order order, AuthorizedUser user) {
-        // Current user has not another processing order
         OrderFilter filter = OrderFilter.builder()
                 .customerId(user.getId())
                 .states(DomainConstants.PROCESS_STATES)
@@ -76,9 +89,14 @@ public class OrderUseCase implements OrderServicePort {
         Dish dish =  dishPersistencePort.findById(orderDish.getDish().getId());
         if(dish == null) throw new EntityNotFoundException(
                 Dish.class.getSimpleName(),
-                orderDish.getDish().getId().toString()
-        );
+                orderDish.getDish().getId().toString());
         if(!Objects.equals(dish.getRestaurant().getId(), restaurant.getId()))
             throw new DishDoesNotBelongToOrderRestaurantException(dish.getName(), restaurant.getName());
+    }
+
+    private AuthorizedUser getCurrentUser(){
+        return authorizationSecurityPort.authorize(
+                TokenHolder.getToken().substring(DomainConstants.TOKEN_PREFIX.length())
+        );
     }
 }

@@ -35,4 +35,11 @@ public class EmployeeJpaAdapter  implements EmployeePersistencePort {
                 employeeRepository.findAll(specs)
         );
     }
+
+    @Override
+    public Employee findById(String id) {
+        return employeeEntityMapper.toDomain(
+                employeeRepository.findById(id).orElse(null)
+        );
+    }
 }
