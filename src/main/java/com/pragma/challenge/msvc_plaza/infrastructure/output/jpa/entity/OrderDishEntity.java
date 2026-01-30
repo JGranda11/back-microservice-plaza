@@ -16,7 +16,7 @@ public class OrderDishEntity {
     @Column(name = "order_dish_id", nullable = false)
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "dish_id", referencedColumnName = "dish_id", nullable = false)
     private DishEntity dish;
 

@@ -23,6 +23,7 @@ public class OrderEntity {
     private Long customerId;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
     private List<OrderDishEntity> dishes;
 
     @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
@@ -33,7 +34,7 @@ public class OrderEntity {
     @Column(name = "state", nullable = false)
     private OrderState state;
 
-    @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "employee_id", referencedColumnName = "employee_id")
     private EmployeeEntity assignedEmployee;
 

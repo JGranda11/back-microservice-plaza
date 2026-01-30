@@ -5,6 +5,7 @@ import com.pragma.challenge.msvc_plaza.application.dto.response.order.OrderCreat
 import com.pragma.challenge.msvc_plaza.application.dto.response.order.OrderDishResponse;
 import com.pragma.challenge.msvc_plaza.application.dto.response.order.OrderResponse;
 import com.pragma.challenge.msvc_plaza.domain.model.Dish;
+import com.pragma.challenge.msvc_plaza.domain.model.Employee;
 import com.pragma.challenge.msvc_plaza.domain.model.Restaurant;
 import com.pragma.challenge.msvc_plaza.domain.model.order.Order;
 import com.pragma.challenge.msvc_plaza.domain.model.order.OrderDish;
@@ -29,6 +30,10 @@ public interface OrderResponseMapper {
     default Long toRestaurantId(Restaurant restaurant){
         return restaurant != null ? restaurant.getId() : null;
     }
+    default Long toEmployeeId(Employee employee){
+        return employee == null ? null: employee.getId();
+    }
+
 
     @Mapping(target = "dishId", source = "dish")
     OrderDishResponse toResponse(OrderDish orderDish);
@@ -37,6 +42,8 @@ public interface OrderResponseMapper {
     OrderCreatedResponse toCreatedResponse(Order order);
 
     @Mapping(target = "restaurantId", source = "restaurant")
+    @Mapping(target = "assignedEmployeeId", source = "assignedEmployee")
+    @Mapping(target = "dishes", source = "dishes")
     OrderResponse toResponse(Order order);
 
     // Editado: Implementación por defecto para evitar 'content: null'
