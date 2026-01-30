@@ -8,4 +8,5 @@ import java.util.List;
 public interface EmployeePersistencePort {
     Employee saveEmployee(Employee employee);
     List<Employee> findAll(EmployeeFilter filter);
+    Employee findById(String id);
 }
