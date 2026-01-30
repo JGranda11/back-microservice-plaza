@@ -1,10 +1,7 @@
 package com.pragma.challenge.msvc_plaza.domain.usecase;
 
 import com.pragma.challenge.msvc_plaza.domain.api.OrderServicePort;
-import com.pragma.challenge.msvc_plaza.domain.exception.CustomerAlreadyHasProcessingOrderException;
-import com.pragma.challenge.msvc_plaza.domain.exception.DishDoesNotBelongToOrderRestaurantException;
-import com.pragma.challenge.msvc_plaza.domain.exception.EntityNotFoundException;
-import com.pragma.challenge.msvc_plaza.domain.exception.NotAuthorizedException;
+import com.pragma.challenge.msvc_plaza.domain.exception.*;
 import com.pragma.challenge.msvc_plaza.domain.model.Dish;
 import com.pragma.challenge.msvc_plaza.domain.model.Employee;
 import com.pragma.challenge.msvc_plaza.domain.model.Restaurant;
@@ -65,6 +62,24 @@ public class OrderUseCase implements OrderServicePort {
         Employee employee = employeePersistencePort.findById(user.getId());
         filter.setRestaurantId(String.valueOf(employee.getRestaurant().getId()));
         return orderPersistencePort.findOrders(filter, paginationData);
+    }
+
+    @Override
+    public Order setAssignedEmployee(Long id) {
+        Order order = orderPersistencePort.findById(id);
+        if(order == null) throw new EntityNotFoundException(Order.class.getSimpleName(), id.toString());
+
+        if(order.getAssignedEmployee() != null) throw new OrderIsAlreadyAssignedException();
+
+        AuthorizedUser user = getCurrentUser();
+        if (user.getRole() != RoleName.EMPLOYEE) throw new NotAuthorizedException();
+
+        Employee employee = employeePersistencePort.findById(user.getId());
+        if (!Objects.equals(employee.getRestaurant().getId(), order.getRestaurant().getId()))
+            throw new NotAuthorizedException();
+        order.setAssignedEmployee(employee);
+        order.setState(OrderState.PREPARING);
+        return orderPersistencePort.updateOrder(order);
     }
 
     private void validateCustomerCanAddOrder(Order order, AuthorizedUser user) {

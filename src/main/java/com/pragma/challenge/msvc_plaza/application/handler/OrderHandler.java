@@ -10,4 +10,5 @@ import com.pragma.challenge.msvc_plaza.application.dto.response.order.OrderRespo
 public interface OrderHandler {
     OrderCreatedResponse createOrder(OrderRequest orderRequest);
     PageResponse<OrderResponse> findOrders(OrderFilterRequest filter, PaginationRequest paginationRequest);
+    OrderResponse setAssignedEmployee(Long id);
 }

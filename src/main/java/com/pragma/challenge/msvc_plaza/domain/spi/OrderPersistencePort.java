@@ -11,4 +11,6 @@ public interface OrderPersistencePort {
     Order saveOrder(Order order);
     List<Order> findFilteredOrders(OrderFilter filter);
     DomainPage<Order> findOrders(OrderFilter filter, PaginationData paginationData);
+    Order findById(Long id);
+    Order updateOrder(Order order);
 }

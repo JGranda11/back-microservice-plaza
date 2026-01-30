@@ -40,6 +40,11 @@ public class ExceptionAdvisor {
         return ExceptionResponseBuilder.buildResponse(e, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(OrderIsAlreadyAssignedException.class)
+    public ResponseEntity<ExceptionResponse> handleOrderIsAlreadyAssigned(OrderIsAlreadyAssignedException e){
+        return ExceptionResponseBuilder.buildResponse(e, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(CustomerAlreadyHasProcessingOrderException.class)
     public ResponseEntity<ExceptionResponse> handleCustomerAlreadyHasAProcessingOrder(CustomerAlreadyHasProcessingOrderException e){
         return ExceptionResponseBuilder.buildResponse(e, HttpStatus.CONFLICT);

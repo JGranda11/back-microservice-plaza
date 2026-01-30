@@ -11,6 +11,8 @@ import com.pragma.challenge.msvc_plaza.infrastructure.output.jpa.mapper.Paginati
 import com.pragma.challenge.msvc_plaza.infrastructure.output.jpa.repository.OrderRepository;
 import com.pragma.challenge.msvc_plaza.infrastructure.output.jpa.specification.OrderSpecificationBuilder;
 import com.pragma.challenge.msvc_plaza.infrastructure.output.jpa.util.PaginationJpa;
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
@@ -23,8 +25,9 @@ public class OrderJpaAdapter implements OrderPersistencePort {
     private final OrderRepository orderRepository;
     private final OrderEntityMapper orderEntityMapper;
     private final PaginationJpaMapper paginationJpaMapper;
+    private final EntityManager entityManager;
 
-
+    @Transactional
     @Override
     public Order saveOrder(Order order) {
         OrderEntity entity = orderEntityMapper.toEntity(order);
@@ -47,6 +50,22 @@ public class OrderJpaAdapter implements OrderPersistencePort {
         PaginationJpa paginationJpa = paginationJpaMapper.toJpa(paginationData);
         return orderEntityMapper.toDomains(
                 orderRepository.findAll(specs, paginationJpa.createPageable())
+        );
+    }
+
+    @Override
+    public Order findById(Long id) {
+        return orderEntityMapper.toDomain(
+                orderRepository.findById(id).orElse(null)
+        );
+    }
+
+    @Override
+    public Order updateOrder(Order order) {
+        OrderEntity entity = orderEntityMapper.toEntity(order);
+        entity.getDishes().forEach(entityManager::detach);
+        return orderEntityMapper.toDomain(
+                orderRepository.save(entity)
         );
     }
 }

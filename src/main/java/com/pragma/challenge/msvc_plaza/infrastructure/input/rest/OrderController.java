@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -66,7 +67,6 @@ public class OrderController {
         );
     }
 
-
     @Operation(summary = "Get dishes from the restaurant where work the actual user")
     @ApiResponses(value = {
             @ApiResponse(
@@ -85,6 +85,37 @@ public class OrderController {
         PaginationRequest paginationRequest = PaginationRequest.build(query);
         return ResponseEntity.ok(
                 orderHandler.findOrders(filter, paginationRequest)
+        );
+    }
+
+    @Operation(summary = "Set order as being in preparation")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Order has been set in preparing",
+                    content = @Content(schema = @Schema(implementation = OrderCreatedResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "An order with that Id doesn't exists",
+                    content = @Content(schema = @Schema(implementation = ExceptionResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Another employee is attending this order",
+                    content = @Content(schema = @Schema(implementation = ExceptionResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Validations don't pass",
+                    content = @Content(schema = @Schema(implementation = ValidationExceptionResponse.class))
+            )
+    })
+    @PreAuthorize("hasAnyRole('EMPLOYEE')")
+    @PatchMapping("/{id}/preparing")
+    public ResponseEntity<OrderResponse> setAssignedEmployee(@PathVariable Long id){
+        return ResponseEntity.ok(
+                orderHandler.setAssignedEmployee(id)
         );
     }
 
