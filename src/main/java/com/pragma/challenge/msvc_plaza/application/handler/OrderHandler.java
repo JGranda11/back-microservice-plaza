@@ -11,4 +11,5 @@ public interface OrderHandler {
     OrderCreatedResponse createOrder(OrderRequest orderRequest);
     PageResponse<OrderResponse> findOrders(OrderFilterRequest filter, PaginationRequest paginationRequest);
     OrderResponse setAssignedEmployee(Long id);
+    OrderResponse setOrderAsDone(Long id);
 }

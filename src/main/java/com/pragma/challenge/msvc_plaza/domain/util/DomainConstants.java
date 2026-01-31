@@ -24,4 +24,7 @@ public class DomainConstants {
     // Pagination
     public static final Integer PAGE_SIZE = 10;
 
+    public static final String NOTIFICATION_MESSAGE_TEMPLATE
+            = "¡Hola, %s %s! Tu pedido está listo, puedes recogerlo dando el siguiente código en el local: %s";
+
 }

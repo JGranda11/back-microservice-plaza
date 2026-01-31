@@ -5,13 +5,13 @@ import com.pragma.challenge.msvc_plaza.domain.exception.*;
 import com.pragma.challenge.msvc_plaza.domain.model.Dish;
 import com.pragma.challenge.msvc_plaza.domain.model.Employee;
 import com.pragma.challenge.msvc_plaza.domain.model.Restaurant;
+import com.pragma.challenge.msvc_plaza.domain.model.User;
+import com.pragma.challenge.msvc_plaza.domain.model.messaging.Notification;
 import com.pragma.challenge.msvc_plaza.domain.model.order.Order;
 import com.pragma.challenge.msvc_plaza.domain.model.order.OrderDish;
 import com.pragma.challenge.msvc_plaza.domain.model.security.AuthorizedUser;
-import com.pragma.challenge.msvc_plaza.domain.spi.DishPersistencePort;
-import com.pragma.challenge.msvc_plaza.domain.spi.EmployeePersistencePort;
-import com.pragma.challenge.msvc_plaza.domain.spi.OrderPersistencePort;
-import com.pragma.challenge.msvc_plaza.domain.spi.RestaurantPersistencePort;
+import com.pragma.challenge.msvc_plaza.domain.spi.*;
+import com.pragma.challenge.msvc_plaza.domain.spi.messaging.NotificationSenderPort;
 import com.pragma.challenge.msvc_plaza.domain.spi.security.AuthorizationSecurityPort;
 import com.pragma.challenge.msvc_plaza.domain.util.DomainConstants;
 import com.pragma.challenge.msvc_plaza.domain.util.GenerationPIN;
@@ -31,17 +31,24 @@ public class OrderUseCase implements OrderServicePort {
     private final AuthorizationSecurityPort authorizationSecurityPort;
     private final DishPersistencePort dishPersistencePort;
     private final EmployeePersistencePort employeePersistencePort;
+    private final UserPersistencePort userPersistencePort;
+    private final NotificationSenderPort notificationSenderPort;
 
     public OrderUseCase(OrderPersistencePort orderPersistencePort,
                         RestaurantPersistencePort restaurantPersistencePort,
                         AuthorizationSecurityPort authorizationSecurityPort,
                         DishPersistencePort dishPersistencePort,
-                        EmployeePersistencePort employeePersistencePort) {
+                        EmployeePersistencePort employeePersistencePort,
+                        UserPersistencePort userPersistencePort,
+                        NotificationSenderPort notificationSenderPort) {
+
         this.orderPersistencePort = orderPersistencePort;
         this.restaurantPersistencePort = restaurantPersistencePort;
         this.authorizationSecurityPort = authorizationSecurityPort;
         this.dishPersistencePort = dishPersistencePort;
         this.employeePersistencePort = employeePersistencePort;
+        this.userPersistencePort = userPersistencePort;
+        this.notificationSenderPort = notificationSenderPort;
     }
 
     @Override
@@ -82,6 +89,29 @@ public class OrderUseCase implements OrderServicePort {
         return orderPersistencePort.updateOrder(order);
     }
 
+    @Override
+    public Order setOrderAsDone(Long id) {
+        AuthorizedUser user = getCurrentUser();
+        if (user.getRole() != RoleName.EMPLOYEE) throw new NotAuthorizedException();
+        Order order = orderPersistencePort.findById(id);
+        if (order == null) throw new EntityNotFoundException(Order.class.getSimpleName(), id.toString());
+
+        if (!Objects.equals(order.getAssignedEmployee().getId(), user.getId())) throw new OrderIsAlreadyAssignedException();
+        if (order.getState() != OrderState.PREPARING) throw new OrderIsNotInPreparationStateException();
+
+        try {
+            notificationSenderPort.sendNotification(
+                    buildNotification(order.getCustomerId(), order.getSecurityPin())
+            );
+        } catch (Exception e){
+            throw new NotificationWasNotSentException();
+        }
+
+        order.setState(OrderState.DONE);
+        return orderPersistencePort.updateOrder(order);
+
+    }
+
     private void validateCustomerCanAddOrder(Order order, AuthorizedUser user) {
         OrderFilter filter = OrderFilter.builder()
                 .customerId(user.getId())
@@ -113,5 +143,15 @@ public class OrderUseCase implements OrderServicePort {
         return authorizationSecurityPort.authorize(
                 TokenHolder.getToken().substring(DomainConstants.TOKEN_PREFIX.length())
         );
+    }
+
+    private Notification buildNotification(String customerId, String code) {
+        User user = userPersistencePort.getUser(customerId);
+        return Notification.builder()
+                .receiver(user.getPhone())
+                .message(String.format(
+                        DomainConstants.NOTIFICATION_MESSAGE_TEMPLATE,
+                        user.getName(), user.getLastname(), code))
+                .build();
     }
 }

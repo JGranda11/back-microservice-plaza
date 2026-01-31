@@ -6,13 +6,13 @@ import com.pragma.challenge.msvc_plaza.domain.exception.NotAuthorizedException;
 import com.pragma.challenge.msvc_plaza.domain.model.Dish;
 import com.pragma.challenge.msvc_plaza.domain.model.Employee;
 import com.pragma.challenge.msvc_plaza.domain.model.Restaurant;
+import com.pragma.challenge.msvc_plaza.domain.model.User;
+import com.pragma.challenge.msvc_plaza.domain.model.messaging.Notification;
 import com.pragma.challenge.msvc_plaza.domain.model.order.Order;
 import com.pragma.challenge.msvc_plaza.domain.model.order.OrderDish;
 import com.pragma.challenge.msvc_plaza.domain.model.security.AuthorizedUser;
-import com.pragma.challenge.msvc_plaza.domain.spi.DishPersistencePort;
-import com.pragma.challenge.msvc_plaza.domain.spi.EmployeePersistencePort;
-import com.pragma.challenge.msvc_plaza.domain.spi.OrderPersistencePort;
-import com.pragma.challenge.msvc_plaza.domain.spi.RestaurantPersistencePort;
+import com.pragma.challenge.msvc_plaza.domain.spi.*;
+import com.pragma.challenge.msvc_plaza.domain.spi.messaging.NotificationSenderPort;
 import com.pragma.challenge.msvc_plaza.domain.spi.security.AuthorizationSecurityPort;
 import com.pragma.challenge.msvc_plaza.domain.util.TokenHolder;
 import com.pragma.challenge.msvc_plaza.domain.util.enums.OrderState;
@@ -31,8 +31,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 class OrderUseCaseTest {
 
@@ -44,6 +44,13 @@ class OrderUseCaseTest {
     private static final String RESTAURANT_NAME = "Mock Restaurant";
     private static final Long DISH_ID = 101L;
     private static final String DISH_NAME = "Mock Dish";
+
+    private static final String EMPLOYEE_ID = "5";
+    private static final String CUSTOMER_ID = "CUSTOMER_456";
+    private static final String SECURITY_PIN = "1234";
+    private static final String CUSTOMER_PHONE = "9876543210";
+    private static final String CUSTOMER_NAME = "John";
+    private static final String CUSTOMER_LASTNAME = "Doe";
 
     private static final AuthorizedUser mockUser = AuthorizedUser.builder()
             .role(USER_ROLE)
@@ -61,6 +68,10 @@ class OrderUseCaseTest {
     private AuthorizationSecurityPort authorizationSecurityPort;
     @Mock
     private EmployeePersistencePort employeePersistencePort;
+    @Mock
+    private NotificationSenderPort notificationSenderPort;
+    @Mock
+    private UserPersistencePort userPersistencePort;
 
     @InjectMocks
     private OrderUseCase orderUseCase;
@@ -174,5 +185,20 @@ class OrderUseCaseTest {
 
         assertThrows(NotAuthorizedException.class, () ->
                 orderUseCase.findOrders(filter, paginationData));
+    }
+
+    @Test
+    void shouldThrowNotAuthorizedException_WhenUserIsNotEmployee() {
+        // Given
+        AuthorizedUser unauthorizedUser = AuthorizedUser.builder()
+                .id("USER_123")
+                .role(RoleName.CUSTOMER)
+                .build();
+
+        when(authorizationSecurityPort.authorize(anyString())).thenReturn(unauthorizedUser);
+
+        // When & Then
+        assertThrows(NotAuthorizedException.class, () -> orderUseCase.setOrderAsDone(1L));
+        verifyNoInteractions(orderPersistencePort);
     }
 }
