@@ -15,5 +15,4 @@ public class OrderResponse {
     private List<OrderDishResponse> dishes;
     private OrderState state;
     private String assignedEmployeeId;
-    private String securityPin;
 }

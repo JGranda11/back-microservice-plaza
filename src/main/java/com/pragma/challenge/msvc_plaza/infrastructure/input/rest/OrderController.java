@@ -1,5 +1,6 @@
 package com.pragma.challenge.msvc_plaza.infrastructure.input.rest;
 
+import com.pragma.challenge.msvc_plaza.application.dto.request.OrderPinRequest;
 import com.pragma.challenge.msvc_plaza.application.dto.request.filter.OrderFilterRequest;
 import com.pragma.challenge.msvc_plaza.application.dto.request.order.OrderRequest;
 import com.pragma.challenge.msvc_plaza.application.dto.request.pagination.PageQuery;
@@ -151,5 +152,34 @@ public class OrderController {
                 orderHandler.setOrderAsDone(id)
         );
     }
-
+    @Operation(summary = "Set order as delivered to the customer")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Order has been set as delivered",
+                    content = @Content(schema = @Schema(implementation = OrderResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "An order with that Id doesn't exists",
+                    content = @Content(schema = @Schema(implementation = ExceptionResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Another employee is attending this order",
+                    content = @Content(schema = @Schema(implementation = ExceptionResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Validations don't pass",
+                    content = @Content(schema = @Schema(implementation = ValidationExceptionResponse.class))
+            )
+    })
+    @PreAuthorize("hasAnyRole('EMPLOYEE')")
+    @PatchMapping("/{id}/delivered")
+    public ResponseEntity<OrderResponse> setOrderAsReceived(@PathVariable Long id, OrderPinRequest pinRequest){
+        return ResponseEntity.ok(
+                orderHandler.setOrderAsDelivered(id, pinRequest)
+        );
+    }
 }

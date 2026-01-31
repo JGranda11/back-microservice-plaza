@@ -1,5 +1,6 @@
 package com.pragma.challenge.msvc_plaza.application.handler.impl;
 
+import com.pragma.challenge.msvc_plaza.application.dto.request.OrderPinRequest;
 import com.pragma.challenge.msvc_plaza.application.dto.request.filter.OrderFilterRequest;
 import com.pragma.challenge.msvc_plaza.application.dto.request.order.OrderRequest;
 import com.pragma.challenge.msvc_plaza.application.dto.request.pagination.PaginationRequest;
@@ -57,6 +58,13 @@ public class OrderHandlerImpl implements OrderHandler {
     public OrderResponse setOrderAsDone(Long id) {
         return orderResponseMapper.toResponse(
                 orderServicePort.setOrderAsDone(id)
+        );
+    }
+
+    @Override
+    public OrderResponse setOrderAsDelivered(Long id, OrderPinRequest pinRequest) {
+        return orderResponseMapper.toResponse(
+                orderServicePort.setOrderAsDelivered(id,pinRequest.getSecurityPin())
         );
     }
 }

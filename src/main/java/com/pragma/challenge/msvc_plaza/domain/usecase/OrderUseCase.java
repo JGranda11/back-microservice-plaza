@@ -112,6 +112,26 @@ public class OrderUseCase implements OrderServicePort {
 
     }
 
+    @Override
+    public Order setOrderAsDelivered(Long id, String securityPin) {
+        AuthorizedUser user = getCurrentUser();
+        if(user.getRole() != RoleName.EMPLOYEE) throw new NotAuthorizedException();
+        Order order = getOrder(id);
+
+        if (!Objects.equals(order.getAssignedEmployee().getId(), user.getId()))
+            throw new OrderIsAlreadyAssignedException();
+
+        if(order.getState() != OrderState.DONE)
+            throw new OrderNotDoneException();
+
+        if(!Objects.equals(securityPin, order.getSecurityPin()))
+            throw new SecurityPinNoMatchException();
+
+        order.setState(OrderState.DELIVERED);
+
+        return orderPersistencePort.updateOrder(order);
+    }
+
     private void validateCustomerCanAddOrder(Order order, AuthorizedUser user) {
         OrderFilter filter = OrderFilter.builder()
                 .customerId(user.getId())
@@ -153,5 +173,11 @@ public class OrderUseCase implements OrderServicePort {
                         DomainConstants.NOTIFICATION_MESSAGE_TEMPLATE,
                         user.getName(), user.getLastname(), code))
                 .build();
+    }
+
+    private Order getOrder(Long id){
+        Order order = orderPersistencePort.findById(id);
+        if (order == null) throw new EntityNotFoundException(Order.class.getSimpleName(), id.toString());
+        return order;
     }
 }
