@@ -74,7 +74,6 @@ public class OrderUseCase implements OrderServicePort {
     @Override
     public Order setAssignedEmployee(Long id) {
         Order order = orderPersistencePort.findById(id);
-        if(order == null) throw new EntityNotFoundException(Order.class.getSimpleName(), id.toString());
 
         if(order.getAssignedEmployee() != null) throw new OrderIsAlreadyAssignedException();
 
@@ -94,7 +93,6 @@ public class OrderUseCase implements OrderServicePort {
         AuthorizedUser user = getCurrentUser();
         if (user.getRole() != RoleName.EMPLOYEE) throw new NotAuthorizedException();
         Order order = orderPersistencePort.findById(id);
-        if (order == null) throw new EntityNotFoundException(Order.class.getSimpleName(), id.toString());
 
         if (!Objects.equals(order.getAssignedEmployee().getId(), user.getId())) throw new OrderIsAlreadyAssignedException();
         if (order.getState() != OrderState.PREPARING) throw new OrderIsNotInPreparationStateException();
@@ -129,6 +127,18 @@ public class OrderUseCase implements OrderServicePort {
 
         order.setState(OrderState.DELIVERED);
 
+        return orderPersistencePort.updateOrder(order);
+    }
+
+    @Override
+    public Order setOrderAsCanceled(Long id) {
+        AuthorizedUser user = getCurrentUser();
+        if (user.getRole() != RoleName.CUSTOMER) throw new NotAuthorizedException();
+        Order order = getOrder(id);
+        if (!Objects.equals(order.getCustomerId(), user.getId())) throw new OrderDoesNotBelongToCustomerException();
+        if (order.getState() != OrderState.WAITING) throw new OrderIsBeingPreparedException();
+
+        order.setState(OrderState.CANCELED);
         return orderPersistencePort.updateOrder(order);
     }
 

@@ -3,6 +3,7 @@ package com.pragma.challenge.msvc_plaza.domain.usecase;
 import com.pragma.challenge.msvc_plaza.domain.exception.CustomerAlreadyHasProcessingOrderException;
 import com.pragma.challenge.msvc_plaza.domain.exception.EntityNotFoundException;
 import com.pragma.challenge.msvc_plaza.domain.exception.NotAuthorizedException;
+import com.pragma.challenge.msvc_plaza.domain.exception.OrderIsBeingPreparedException;
 import com.pragma.challenge.msvc_plaza.domain.model.Dish;
 import com.pragma.challenge.msvc_plaza.domain.model.Employee;
 import com.pragma.challenge.msvc_plaza.domain.model.Restaurant;
@@ -302,5 +303,78 @@ class OrderUseCaseTest {
 
         // Ve
         assertDoesNotThrow(() -> {});
+    }
+
+    @Test
+    void shouldCancelOrderSuccessfully() {
+        String commonCustomerId = "CUSTOMER_123";
+
+        AuthorizedUser customer = AuthorizedUser.builder()
+                .id(commonCustomerId)
+                .role(RoleName.CUSTOMER)
+                .build();
+
+        Order order = Order.builder()
+                .id(ORDER_ID)
+                .customerId(commonCustomerId)
+                .state(OrderState.WAITING)
+                .build();
+
+        // Mocks
+        when(authorizationSecurityPort.authorize(anyString())).thenReturn(customer);
+        when(orderPersistencePort.findById(ORDER_ID)).thenReturn(order);
+        when(orderPersistencePort.updateOrder(any(Order.class))).thenReturn(order);
+
+        // When
+        Order result = orderUseCase.setOrderAsCanceled(ORDER_ID);
+
+        // Then
+        assertEquals(OrderState.CANCELED, result.getState());
+        verify(orderPersistencePort, times(1)).updateOrder(any(Order.class));
+    }
+
+    @Test
+    void orderCanceled_shouldThrowNotAuthorizedException_WhenUserIsNotCustomer() {
+        AuthorizedUser unauthorizedUser = AuthorizedUser.builder()
+                .id("EMPLOYEE_123")
+                .role(RoleName.EMPLOYEE)
+                .build();
+
+        when(authorizationSecurityPort.authorize(anyString())).thenReturn(unauthorizedUser);
+
+        assertThrows(NotAuthorizedException.class, () -> orderUseCase.setOrderAsCanceled(ORDER_ID));
+        verifyNoInteractions(orderPersistencePort);
+    }
+
+    @Test
+    void orderCanceled_shouldThrowEntityNotFoundException_WhenOrderNotFound() {
+        AuthorizedUser customer = AuthorizedUser.builder()
+                .id(CUSTOMER_ID)
+                .role(RoleName.CUSTOMER)
+                .build();
+
+        when(authorizationSecurityPort.authorize(anyString())).thenReturn(customer);
+        when(orderPersistencePort.findById(ORDER_ID)).thenReturn(null);
+
+        assertThrows(EntityNotFoundException.class, () -> orderUseCase.setOrderAsCanceled(ORDER_ID));
+    }
+
+    @Test
+    void orderCanceled_shouldThrowOrderIsBeingPreparedException_WhenOrderIsNotWaiting() {
+        AuthorizedUser customer = AuthorizedUser.builder()
+                .id(CUSTOMER_ID)
+                .role(RoleName.CUSTOMER)
+                .build();
+
+        Order order = Order.builder()
+                .id(ORDER_ID)
+                .customerId(CUSTOMER_ID)
+                .state(OrderState.PREPARING) // Not WAITING
+                .build();
+
+        when(authorizationSecurityPort.authorize(anyString())).thenReturn(customer);
+        when(orderPersistencePort.findById(ORDER_ID)).thenReturn(order);
+
+        assertThrows(OrderIsBeingPreparedException.class, () -> orderUseCase.setOrderAsCanceled(ORDER_ID));
     }
 }

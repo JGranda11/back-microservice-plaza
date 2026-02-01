@@ -11,4 +11,5 @@ public interface OrderServicePort {
     Order setAssignedEmployee(Long id);
     Order setOrderAsDone(Long id);
     Order setOrderAsDelivered(Long id, String securityPin);
+    Order setOrderAsCanceled(Long id);
 }

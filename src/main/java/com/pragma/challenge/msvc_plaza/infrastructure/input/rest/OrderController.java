@@ -182,4 +182,36 @@ public class OrderController {
                 orderHandler.setOrderAsDelivered(id, pinRequest)
         );
     }
+
+    @Operation(summary = "Set the order as canceled")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "The order has been canceled successfully",
+                    content =  @Content(schema = @Schema(implementation = OrderCreatedResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "An order with that Id doesn't exists",
+                    content =  @Content(schema = @Schema(implementation = ExceptionResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "The order could not be canceled because is being prepared",
+                    content =  @Content(schema = @Schema(implementation = ExceptionResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Validations don't pass",
+                    content =  @Content(schema = @Schema(implementation = ValidationExceptionResponse.class))
+            ),
+    })
+
+    @PreAuthorize("hasAnyRole('CUSTOMER')")
+    @PatchMapping("/{id}/canceled")
+    public ResponseEntity<OrderResponse> setOrderAsCanceled(@PathVariable Long id){
+        return ResponseEntity.ok(
+                orderHandler.setOrderAsCanceled(id)
+        );
+    }
 }

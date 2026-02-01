@@ -14,4 +14,5 @@ public interface OrderHandler {
     OrderResponse setAssignedEmployee(Long id);
     OrderResponse setOrderAsDone(Long id);
     OrderResponse setOrderAsDelivered(Long id, OrderPinRequest pinRequest);
+    OrderResponse setOrderAsCanceled(Long id);
 }
