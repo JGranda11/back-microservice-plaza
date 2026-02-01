@@ -67,4 +67,11 @@ public class OrderHandlerImpl implements OrderHandler {
                 orderServicePort.setOrderAsDelivered(id,pinRequest.getSecurityPin())
         );
     }
+
+    @Override
+    public OrderResponse setOrderAsCanceled(Long id) {
+        return orderResponseMapper.toResponse(
+                orderServicePort.setOrderAsCanceled(id)
+        );
+    }
 }
