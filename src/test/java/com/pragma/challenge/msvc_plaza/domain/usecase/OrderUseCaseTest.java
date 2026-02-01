@@ -6,13 +6,13 @@ import com.pragma.challenge.msvc_plaza.domain.exception.NotAuthorizedException;
 import com.pragma.challenge.msvc_plaza.domain.model.Dish;
 import com.pragma.challenge.msvc_plaza.domain.model.Employee;
 import com.pragma.challenge.msvc_plaza.domain.model.Restaurant;
+import com.pragma.challenge.msvc_plaza.domain.model.User;
+import com.pragma.challenge.msvc_plaza.domain.model.messaging.Notification;
 import com.pragma.challenge.msvc_plaza.domain.model.order.Order;
 import com.pragma.challenge.msvc_plaza.domain.model.order.OrderDish;
 import com.pragma.challenge.msvc_plaza.domain.model.security.AuthorizedUser;
-import com.pragma.challenge.msvc_plaza.domain.spi.DishPersistencePort;
-import com.pragma.challenge.msvc_plaza.domain.spi.EmployeePersistencePort;
-import com.pragma.challenge.msvc_plaza.domain.spi.OrderPersistencePort;
-import com.pragma.challenge.msvc_plaza.domain.spi.RestaurantPersistencePort;
+import com.pragma.challenge.msvc_plaza.domain.spi.*;
+import com.pragma.challenge.msvc_plaza.domain.spi.messaging.NotificationSenderPort;
 import com.pragma.challenge.msvc_plaza.domain.spi.security.AuthorizationSecurityPort;
 import com.pragma.challenge.msvc_plaza.domain.util.TokenHolder;
 import com.pragma.challenge.msvc_plaza.domain.util.enums.OrderState;
@@ -31,8 +31,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 class OrderUseCaseTest {
 
@@ -44,6 +44,13 @@ class OrderUseCaseTest {
     private static final String RESTAURANT_NAME = "Mock Restaurant";
     private static final Long DISH_ID = 101L;
     private static final String DISH_NAME = "Mock Dish";
+
+    private static final String EMPLOYEE_ID = "5";
+    private static final String CUSTOMER_ID = "CUSTOMER_456";
+    private static final String SECURITY_PIN = "1234";
+    private static final String CUSTOMER_PHONE = "9876543210";
+    private static final String CUSTOMER_NAME = "John";
+    private static final String CUSTOMER_LASTNAME = "Doe";
 
     private static final AuthorizedUser mockUser = AuthorizedUser.builder()
             .role(USER_ROLE)
@@ -61,6 +68,10 @@ class OrderUseCaseTest {
     private AuthorizationSecurityPort authorizationSecurityPort;
     @Mock
     private EmployeePersistencePort employeePersistencePort;
+    @Mock
+    private NotificationSenderPort notificationSenderPort;
+    @Mock
+    private UserPersistencePort userPersistencePort;
 
     @InjectMocks
     private OrderUseCase orderUseCase;
@@ -174,5 +185,122 @@ class OrderUseCaseTest {
 
         assertThrows(NotAuthorizedException.class, () ->
                 orderUseCase.findOrders(filter, paginationData));
+    }
+
+    @Test
+    void shouldThrowNotAuthorizedException_WhenUserIsNotEmployee() {
+        // Given
+        AuthorizedUser unauthorizedUser = AuthorizedUser.builder()
+                .id("USER_123")
+                .role(RoleName.CUSTOMER)
+                .build();
+
+        when(authorizationSecurityPort.authorize(anyString())).thenReturn(unauthorizedUser);
+
+        // When & Then
+        assertThrows(NotAuthorizedException.class, () -> orderUseCase.setOrderAsDone(1L));
+        verifyNoInteractions(orderPersistencePort);
+    }
+
+    @Test
+    void shouldSetOrderAsDoneSuccessfully() {
+        AuthorizedUser employee = AuthorizedUser.builder()
+                .id(null)
+                .role(RoleName.EMPLOYEE)
+                .build();
+
+        Employee assignedEmployee = Employee.builder()
+                .id(null)
+                .build();
+
+        Order order = Order.builder()
+                .id(1L)
+                .assignedEmployee(assignedEmployee)
+                .state(OrderState.PREPARING)
+                .customerId(CUSTOMER_ID)
+                .securityPin(SECURITY_PIN)
+                .build();
+
+        User customer = User.builder()
+                .name(CUSTOMER_NAME)
+                .lastname(CUSTOMER_LASTNAME)
+                .phone(CUSTOMER_PHONE)
+                .build();
+
+        // Mocks de los puertos
+        when(authorizationSecurityPort.authorize(anyString())).thenReturn(employee);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(userPersistencePort.getUser(CUSTOMER_ID)).thenReturn(customer);
+        when(orderPersistencePort.updateOrder(any(Order.class))).thenReturn(order);
+
+        // When
+        Order result = orderUseCase.setOrderAsDone(1L);
+
+        // Then
+        assertEquals(OrderState.DONE, result.getState());
+        assertEquals(OrderState.DONE, order.getState());
+        verify(notificationSenderPort, times(1)).sendNotification(any(Notification.class));
+        verify(orderPersistencePort, times(1)).updateOrder(any(Order.class));
+    }
+
+    @Test
+    void orderDone_shouldThrowNotAuthorizedException_WhenUserIsNotEmployee() {
+        // Given
+        AuthorizedUser unauthorizedUser = AuthorizedUser.builder()
+                .id("USER_123")
+                .role(RoleName.CUSTOMER)
+                .build();
+
+        when(authorizationSecurityPort.authorize(anyString())).thenReturn(unauthorizedUser);
+
+        // When & Then
+        assertThrows(NotAuthorizedException.class, () -> orderUseCase.setOrderAsDone(1L));
+        verifyNoInteractions(orderPersistencePort);
+    }
+
+    @Test
+    void orderDone_shouldThrowEntityNotFoundException_WhenOrderNotFound() {
+        // Given
+        AuthorizedUser employee = AuthorizedUser.builder()
+                .id(EMPLOYEE_ID)
+                .role(RoleName.EMPLOYEE)
+                .build();
+
+        when(authorizationSecurityPort.authorize(anyString())).thenReturn(employee);
+        when(orderPersistencePort.findById(1L)).thenReturn(null);
+
+        // When & Then
+        assertThrows(EntityNotFoundException.class, () -> orderUseCase.setOrderAsDone(1L));
+    }
+
+    @Test
+    void shouldSetOrderAsDeliveredSuccessfully() {
+        AuthorizedUser employee = AuthorizedUser.builder()
+                .id(null)
+                .role(RoleName.EMPLOYEE)
+                .build();
+
+        Order order = Order.builder()
+                .id(1L)
+                .assignedEmployee(Employee.builder().id(null).build())
+                .state(OrderState.DONE)
+                .securityPin(SECURITY_PIN)
+                .build();
+
+        // Mocks de puertos necesarios
+        when(authorizationSecurityPort.authorize(anyString())).thenReturn(employee);
+        when(orderPersistencePort.findById(1L)).thenReturn(order);
+        when(orderPersistencePort.updateOrder(any(Order.class))).thenReturn(order);
+
+        // When
+
+        Order result = orderUseCase.setOrderAsDelivered(1L, SECURITY_PIN);
+
+        // Then
+        assertEquals(OrderState.DELIVERED, result.getState());
+        verify(orderPersistencePort, times(1)).updateOrder(any(Order.class));
+
+        // Ve
+        assertDoesNotThrow(() -> {});
     }
 }

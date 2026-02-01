@@ -55,6 +55,26 @@ public class ExceptionAdvisor {
         return ExceptionResponseBuilder.buildResponse(e, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(NotificationWasNotSentException.class)
+    public ResponseEntity<ExceptionResponse> handleNotificationWasNotSent(NotificationWasNotSentException e){
+        return ExceptionResponseBuilder.buildResponse(e, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(OrderIsNotInPreparationStateException.class)
+    public ResponseEntity<ExceptionResponse> handleOrderNotDone(OrderIsNotInPreparationStateException e){
+        return ExceptionResponseBuilder.buildResponse(e, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(SecurityPinNoMatchException.class)
+    public ResponseEntity<ExceptionResponse> handleSecurityPinNotMatch(SecurityPinNoMatchException e){
+        return ExceptionResponseBuilder.buildResponse(e, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(OrderNotDoneException.class)
+    public ResponseEntity<ExceptionResponse> handleOrderIsNotDonde(OrderNotDoneException e){
+        return ExceptionResponseBuilder.buildResponse(e, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler( MethodArgumentNotValidException.class )
     public ResponseEntity<ValidationExceptionResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         ValidationExceptionResponse exceptionResponse = ValidationExceptionResponse.builder()

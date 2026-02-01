@@ -2,6 +2,7 @@ package com.pragma.challenge.msvc_plaza.infrastructure.configuration.feign;
 
 import com.pragma.challenge.msvc_plaza.domain.util.TokenHolder;
 import com.pragma.challenge.msvc_plaza.infrastructure.output.feign.client.AuthFeign;
+import com.pragma.challenge.msvc_plaza.infrastructure.output.feign.client.NotificationFeign;
 import com.pragma.challenge.msvc_plaza.infrastructure.output.feign.client.UserFeign;
 import com.pragma.challenge.msvc_plaza.infrastructure.util.ConfigurationConstants;
 import feign.Feign;
@@ -19,6 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 @EnableFeignClients(
         clients = {
                 AuthFeign.class,
+                NotificationFeign.class,
                 UserFeign.class
         }
 )

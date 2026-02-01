@@ -9,4 +9,6 @@ public interface OrderServicePort {
     Order createOrder(Order order);
     DomainPage<Order> findOrders(OrderFilter filter, PaginationData paginationData);
     Order setAssignedEmployee(Long id);
+    Order setOrderAsDone(Long id);
+    Order setOrderAsDelivered(Long id, String securityPin);
 }
