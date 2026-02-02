@@ -49,4 +49,11 @@ public class RestaurantJpaAdapter implements RestaurantPersistencePort {
 
         return restaurantEntityMapper.toDomains(page);
     }
+
+    @Override
+    public Restaurant findByOwnerId(String id) {
+        return  restaurantEntityMapper.toDomain(
+                restaurantRepository.findByOwnerId(id).orElse(null)
+        );
+    }
 }

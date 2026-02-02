@@ -9,4 +9,5 @@ public interface RestaurantPersistencePort {
     Restaurant saveRestaurant(Restaurant restaurant);
     Restaurant findByNit(String nit);
     DomainPage<Restaurant> findAll(PaginationData paginationData);
+    Restaurant findByOwnerId(String id);
 }

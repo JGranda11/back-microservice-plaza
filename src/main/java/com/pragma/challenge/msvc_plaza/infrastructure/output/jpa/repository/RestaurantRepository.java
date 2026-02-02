@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface RestaurantRepository extends JpaRepository<RestaurantEntity, Long> {
     Optional<RestaurantEntity> findByNit(String nit);
     Page<RestaurantEntity> findAll(Pageable pageable);
+    Optional<RestaurantEntity> findByOwnerId(String id);
 }

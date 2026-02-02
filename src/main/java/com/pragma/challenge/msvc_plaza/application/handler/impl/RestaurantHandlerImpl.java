@@ -4,10 +4,7 @@ import com.pragma.challenge.msvc_plaza.application.dto.request.EmployeeRequest;
 import com.pragma.challenge.msvc_plaza.application.dto.request.RestaurantRequest;
 import com.pragma.challenge.msvc_plaza.application.dto.request.filter.DishFilterRequest;
 import com.pragma.challenge.msvc_plaza.application.dto.request.pagination.PaginationRequest;
-import com.pragma.challenge.msvc_plaza.application.dto.response.DishResponse;
-import com.pragma.challenge.msvc_plaza.application.dto.response.EmployeeResponse;
-import com.pragma.challenge.msvc_plaza.application.dto.response.PageResponse;
-import com.pragma.challenge.msvc_plaza.application.dto.response.RestaurantResponse;
+import com.pragma.challenge.msvc_plaza.application.dto.response.*;
 import com.pragma.challenge.msvc_plaza.application.handler.RestaurantHandler;
 import com.pragma.challenge.msvc_plaza.application.mapper.request.EmployeeRequestMapper;
 import com.pragma.challenge.msvc_plaza.application.mapper.request.PaginationRequestMapper;
@@ -61,6 +58,13 @@ public class RestaurantHandlerImpl implements RestaurantHandler {
 
         return dishResponseMapper.toResponses(
                 restaurantServicePort.findDishesOfRestaurant(id, filterRequest.getCategory(),paginationData)
+        );
+    }
+
+    @Override
+    public OwnerRestaurantResponse findCurrentUserRestaurant() {
+        return restaurantResponseMapper.toOwnerResponse(
+                restaurantServicePort.findCurrentOwnerRestaurant()
         );
     }
 }
