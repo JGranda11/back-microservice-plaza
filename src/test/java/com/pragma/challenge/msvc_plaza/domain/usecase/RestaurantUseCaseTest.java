@@ -2,6 +2,7 @@ package com.pragma.challenge.msvc_plaza.domain.usecase;
 
 import com.pragma.challenge.msvc_plaza.domain.exception.EntityAlreadyExistsException;
 import com.pragma.challenge.msvc_plaza.domain.exception.EntityNotFoundException;
+import com.pragma.challenge.msvc_plaza.domain.exception.OwnerHasNotRestaurantException;
 import com.pragma.challenge.msvc_plaza.domain.exception.UserRoleMustBeOwnerException;
 import com.pragma.challenge.msvc_plaza.domain.model.Dish;
 import com.pragma.challenge.msvc_plaza.domain.model.Employee;
@@ -62,6 +63,11 @@ public class RestaurantUseCaseTest {
     private static final String CATEGORY_MAIN_COURSE = "Main Course";
     private static final String CATEGORY_DESSERTS = "Desserts";
 
+    private static final AuthorizedUser mockEmployee = AuthorizedUser.builder()
+            .role(RoleName.EMPLOYEE)
+            .token("user-authorization-token")
+            .id("employee-id")
+            .build();
 
     @BeforeEach
     void setUp() {
@@ -197,5 +203,22 @@ public class RestaurantUseCaseTest {
         verify(dishPersistencePort).findAll(any(), eq(paginationData));
         assertEquals(expectedPage, result);
     }
+    @Test
+    void findCurrentOwnerRestaurant_Success() {
+        when(authorizationSecurityPort.authorize(any())).thenReturn(mockEmployee);
+        when(restaurantPersistencePort.findByOwnerId(any())).thenReturn(mockRestaurant);
 
+        Restaurant result = restaurantUseCase.findCurrentOwnerRestaurant();
+
+        assertNotNull(result);
+        verify(restaurantPersistencePort).findByOwnerId(any());
+    }
+
+    @Test
+    void findCurrentOwnerRestaurant_OwnerHasNoRestaurant() {
+        when(authorizationSecurityPort.authorize(any())).thenReturn(mockEmployee);
+        when(restaurantPersistencePort.findByOwnerId(any())).thenReturn(null);
+
+        assertThrows(OwnerHasNotRestaurantException.class, () -> restaurantUseCase.findCurrentOwnerRestaurant());
+    }
 }

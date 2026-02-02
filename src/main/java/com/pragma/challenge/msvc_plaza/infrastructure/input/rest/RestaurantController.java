@@ -6,10 +6,7 @@ import com.pragma.challenge.msvc_plaza.application.dto.request.filter.DishFilter
 import com.pragma.challenge.msvc_plaza.application.dto.request.pagination.PageQuery;
 import com.pragma.challenge.msvc_plaza.application.dto.request.pagination.PaginationRequest;
 import com.pragma.challenge.msvc_plaza.application.dto.request.pagination.RestaurantPageQuery;
-import com.pragma.challenge.msvc_plaza.application.dto.response.DishResponse;
-import com.pragma.challenge.msvc_plaza.application.dto.response.EmployeeResponse;
-import com.pragma.challenge.msvc_plaza.application.dto.response.PageResponse;
-import com.pragma.challenge.msvc_plaza.application.dto.response.RestaurantResponse;
+import com.pragma.challenge.msvc_plaza.application.dto.response.*;
 import com.pragma.challenge.msvc_plaza.application.handler.RestaurantHandler;
 import com.pragma.challenge.msvc_plaza.infrastructure.configuration.advisor.response.ExceptionResponse;
 import com.pragma.challenge.msvc_plaza.infrastructure.configuration.advisor.response.ValidationExceptionResponse;
@@ -145,6 +142,32 @@ public class RestaurantController {
         PaginationRequest pagination = PaginationRequest.build(query);
         return ResponseEntity.ok(
                 restaurantHandler.findDishesOfRestaurant(id,pagination,filterRequest)
+        );
+    }
+
+    @Operation(
+            summary = "Search restaurant of the current user"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Restaurant has been found",
+                    content = @Content(
+                            schema = @Schema(implementation = PageResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "A restaurant with that Id doesn't exists",
+                    content = @Content(
+                            schema = @Schema(implementation = ExceptionResponse.class)
+                    )
+            )
+    })
+    @GetMapping("/owner")
+    public ResponseEntity<OwnerRestaurantResponse> getRestaurantCurrentUser(){
+        return ResponseEntity.ok(
+                restaurantHandler.findCurrentUserRestaurant()
         );
     }
 }

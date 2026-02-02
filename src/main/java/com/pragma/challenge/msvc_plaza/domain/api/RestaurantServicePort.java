@@ -11,4 +11,5 @@ public interface RestaurantServicePort {
     Employee registerEmployee(Employee employee);
     DomainPage<Restaurant> findPage(PaginationData paginationData);
     DomainPage<Dish> findDishesOfRestaurant(Long id, String category, PaginationData paginationData);
+    Restaurant findCurrentOwnerRestaurant();
 }

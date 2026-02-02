@@ -1,10 +1,7 @@
 package com.pragma.challenge.msvc_plaza.domain.usecase;
 
 import com.pragma.challenge.msvc_plaza.domain.api.RestaurantServicePort;
-import com.pragma.challenge.msvc_plaza.domain.exception.EntityAlreadyExistsException;
-import com.pragma.challenge.msvc_plaza.domain.exception.EntityNotFoundException;
-import com.pragma.challenge.msvc_plaza.domain.exception.RestaurantDoesNotBelongToUserException;
-import com.pragma.challenge.msvc_plaza.domain.exception.UserRoleMustBeOwnerException;
+import com.pragma.challenge.msvc_plaza.domain.exception.*;
 import com.pragma.challenge.msvc_plaza.domain.model.Dish;
 import com.pragma.challenge.msvc_plaza.domain.model.Employee;
 import com.pragma.challenge.msvc_plaza.domain.model.Restaurant;
@@ -75,6 +72,15 @@ public class RestaurantUseCase implements RestaurantServicePort {
         return dishPersistencePort.findAll(filter, paginationData);
     }
 
+    @Override
+    public Restaurant findCurrentOwnerRestaurant() {
+        AuthorizedUser owner = authorizationSecurityPort.authorize(TokenHolder.getToken().substring(DomainConstants.TOKEN_PREFIX.length()));
+        Restaurant restaurant=  restaurantPersistencePort.findByOwnerId(owner.getId());
+        if(restaurant == null) throw new OwnerHasNotRestaurantException();
+        return restaurant;
+    }
+
+
     private void validateRestaurant(Restaurant restaurant){
         if (!userPersistencePort.isOwner(restaurant.getOwnerId())) {
             throw new UserRoleMustBeOwnerException();
@@ -95,7 +101,7 @@ public class RestaurantUseCase implements RestaurantServicePort {
 
         AuthorizedUser user = authorizationSecurityPort.authorize(TokenHolder.getToken()
                 .substring(DomainConstants.TOKEN_PREFIX.length()));
-
+        employee.setRestaurant(restaurant);
         if(!Objects.equals(Long.valueOf(user.getId()), restaurant.getOwnerId())){
             throw new RestaurantDoesNotBelongToUserException();
         }
