@@ -12,6 +12,7 @@ import com.pragma.challenge.msvc_plaza.domain.model.order.OrderDish;
 import com.pragma.challenge.msvc_plaza.domain.model.security.AuthorizedUser;
 import com.pragma.challenge.msvc_plaza.domain.spi.*;
 import com.pragma.challenge.msvc_plaza.domain.spi.messaging.NotificationSenderPort;
+import com.pragma.challenge.msvc_plaza.domain.spi.report.OrderReportPort;
 import com.pragma.challenge.msvc_plaza.domain.spi.security.AuthorizationSecurityPort;
 import com.pragma.challenge.msvc_plaza.domain.util.DomainConstants;
 import com.pragma.challenge.msvc_plaza.domain.util.GenerationPIN;
@@ -33,6 +34,7 @@ public class OrderUseCase implements OrderServicePort {
     private final EmployeePersistencePort employeePersistencePort;
     private final UserPersistencePort userPersistencePort;
     private final NotificationSenderPort notificationSenderPort;
+    private final OrderReportPort orderReportPort;
 
     public OrderUseCase(OrderPersistencePort orderPersistencePort,
                         RestaurantPersistencePort restaurantPersistencePort,
@@ -40,7 +42,7 @@ public class OrderUseCase implements OrderServicePort {
                         DishPersistencePort dishPersistencePort,
                         EmployeePersistencePort employeePersistencePort,
                         UserPersistencePort userPersistencePort,
-                        NotificationSenderPort notificationSenderPort) {
+                        NotificationSenderPort notificationSenderPort, OrderReportPort orderReportPort) {
 
         this.orderPersistencePort = orderPersistencePort;
         this.restaurantPersistencePort = restaurantPersistencePort;
@@ -49,6 +51,7 @@ public class OrderUseCase implements OrderServicePort {
         this.employeePersistencePort = employeePersistencePort;
         this.userPersistencePort = userPersistencePort;
         this.notificationSenderPort = notificationSenderPort;
+        this.orderReportPort = orderReportPort;
     }
 
     @Override
@@ -58,7 +61,14 @@ public class OrderUseCase implements OrderServicePort {
         order.setState(OrderState.WAITING);
         order.setSecurityPin(GenerationPIN.generateRandomSecurityPin());
         order.setCustomerId(user.getId());
-        return orderPersistencePort.saveOrder(order);
+
+        Order savedOrder = orderPersistencePort.saveOrder(order);
+        try {
+            orderReportPort.sendNewOrderReport(savedOrder);
+            return savedOrder;
+        } catch (Exception e) {
+            throw new ErrorDuringReportingException();
+        }
     }
 
     @Override
@@ -85,6 +95,11 @@ public class OrderUseCase implements OrderServicePort {
             throw new NotAuthorizedException();
         order.setAssignedEmployee(employee);
         order.setState(OrderState.PREPARING);
+        try {
+            orderReportPort.addEmployeeToOrderLog(order.getId(), user.getId());
+        } catch (Exception e) {
+            throw new ErrorDuringReportingException();
+        }
         return orderPersistencePort.updateOrder(order);
     }
 
@@ -106,6 +121,7 @@ public class OrderUseCase implements OrderServicePort {
         }
 
         order.setState(OrderState.DONE);
+        reportChangeOfState(order.getId(), order.getState());
         return orderPersistencePort.updateOrder(order);
 
     }
@@ -126,7 +142,7 @@ public class OrderUseCase implements OrderServicePort {
             throw new SecurityPinNoMatchException();
 
         order.setState(OrderState.DELIVERED);
-
+        reportChangeOfState(order.getId(), order.getState());
         return orderPersistencePort.updateOrder(order);
     }
 
@@ -139,6 +155,7 @@ public class OrderUseCase implements OrderServicePort {
         if (order.getState() != OrderState.WAITING) throw new OrderIsBeingPreparedException();
 
         order.setState(OrderState.CANCELED);
+        reportChangeOfState(order.getId(), order.getState());
         return orderPersistencePort.updateOrder(order);
     }
 
@@ -189,5 +206,13 @@ public class OrderUseCase implements OrderServicePort {
         Order order = orderPersistencePort.findById(id);
         if (order == null) throw new EntityNotFoundException(Order.class.getSimpleName(), id.toString());
         return order;
+    }
+
+    private void reportChangeOfState(Long orderId, OrderState state) {
+        try {
+            orderReportPort.addNewStateToOrderLog(orderId, state);
+        } catch (Exception e) {
+            throw new ErrorDuringReportingException();
+        }
     }
 }
