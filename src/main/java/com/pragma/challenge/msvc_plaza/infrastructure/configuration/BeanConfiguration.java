@@ -6,6 +6,7 @@ import com.pragma.challenge.msvc_plaza.domain.api.RestaurantServicePort;
 import com.pragma.challenge.msvc_plaza.domain.api.security.AuthorizationServicePort;
 import com.pragma.challenge.msvc_plaza.domain.spi.*;
 import com.pragma.challenge.msvc_plaza.domain.spi.messaging.NotificationSenderPort;
+import com.pragma.challenge.msvc_plaza.domain.spi.report.OrderReportPort;
 import com.pragma.challenge.msvc_plaza.domain.spi.security.AuthorizationSecurityPort;
 import com.pragma.challenge.msvc_plaza.domain.usecase.DishUseCase;
 import com.pragma.challenge.msvc_plaza.domain.usecase.OrderUseCase;
@@ -67,7 +68,8 @@ public class BeanConfiguration {
             DishPersistencePort dishPersistencePort,
             EmployeePersistencePort employeePersistencePort,
             UserPersistencePort userPersistencePort,
-            NotificationSenderPort notificationSenderPort
+            NotificationSenderPort notificationSenderPort,
+            OrderReportPort orderReportPort
     ){
         return new OrderUseCase(
                 orderPersistencePort,
@@ -76,7 +78,8 @@ public class BeanConfiguration {
                 dishPersistencePort,
                 employeePersistencePort,
                 userPersistencePort,
-                notificationSenderPort
+                notificationSenderPort,
+                orderReportPort
         );
     }
 
